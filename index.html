@@ -1,3 +1,4 @@
+@ -0,0 +1,489 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -6,365 +7,201 @@
   <title>残業代タイマー</title>
   <style>
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
-      background: linear-gradient(180deg, #f4f6fb 0%, #eef1f7 100%);
-      color: #0d1635;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+      color: #0f172a;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 24px;
-      transition: background 0.3s, color 0.3s;
+      transition: background 0.25s ease, color 0.25s ease;
     }
-
     body.dark-mode {
-      background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
-      color: #f3f4f6;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #f8fafc;
     }
-
     .card {
-      width: min(92vw, 760px);
-      margin: 36px auto;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 28px;
-      padding: 28px 20px 32px;
-      box-shadow: 0 12px 40px rgba(31, 41, 55, 0.08);
-      backdrop-filter: blur(8px);
+      width: 100%;
+      max-width: 460px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 24px;
+      padding: 28px 22px;
+      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+      backdrop-filter: blur(10px);
+      transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
     }
-
     body.dark-mode .card {
-      background: rgba(31, 41, 55, 0.92);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
     }
-
     h1 {
-      margin: 6px 0 28px;
+      margin: 0 0 20px;
       font-size: 28px;
-      font-weight: 800;
       text-align: center;
       letter-spacing: 1px;
     }
-
     .amount-label {
       text-align: center;
-      color: #6b7280;
-      font-size: 18px;
-      margin-bottom: 10px;
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 8px;
+      transition: color 0.25s ease;
     }
-
-    body.dark-mode .amount-label,
-    body.dark-mode .field-label,
-    body.dark-mode .info-title,
-    body.dark-mode .settings-summary-title,
-    body.dark-mode .hint,
-    body.dark-mode .settings-summary-value small {
-      color: #cbd5e1;
-    }
-
+    body.dark-mode .amount-label { color: #cbd5e1; }
     .amount {
       text-align: center;
-      font-size: clamp(56px, 10vw, 84px);
-      font-weight: 900;
-      line-height: 1;
-      margin: 8px 0 28px;
-      letter-spacing: -2px;
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 22px;
+      letter-spacing: 1px;
       font-variant-numeric: tabular-nums;
       word-break: break-all;
     }
-
-    .field-group {
-      margin-bottom: 22px;
+    .input-row, .settings-summary {
+      margin-bottom: 14px;
     }
-
-    .field-label {
+    label {
       display: block;
-      margin-bottom: 10px;
-      font-size: 18px;
-      font-weight: 700;
-      color: #6b7280;
+      font-size: 14px;
+      color: #475569;
+      margin-bottom: 8px;
+      transition: color 0.25s ease;
     }
-
-    .time-input,
-    input[type="number"] {
-      display: block;
+    body.dark-mode label { color: #cbd5e1; }
+    input[type="time"], input[type="number"] {
       width: 100%;
-      max-width: 100%;
-      border: 2px solid #d7dbe5;
-      border-radius: 22px;
-      background: #fff;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font-size: 16px;
       outline: none;
-      appearance: none;
-      -webkit-appearance: none;
-      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
+      transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
     }
-
-    .time-input {
-      min-height: 84px;
-      padding: 0 20px;
-      font-size: 24px;
-      font-weight: 700;
-      color: #111827;
-      text-align: center;
+    body.dark-mode input[type="time"], body.dark-mode input[type="number"] {
+      background: rgba(30, 41, 59, 0.9);
+      color: #f8fafc;
+      border: 1px solid rgba(148, 163, 184, 0.3);
     }
-
-    input[type="number"] {
-      min-height: 56px;
-      padding: 0 16px;
-      font-size: 18px;
-      color: #111827;
+    input:focus {
+      border-color: rgba(96, 165, 250, 0.9);
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
     }
-
-    .time-input:focus,
-    input[type="number"]:focus {
-      border-color: #7aaef7;
-      box-shadow: 0 0 0 4px rgba(122, 174, 247, 0.15);
-    }
-
-    body.dark-mode .time-input,
-    body.dark-mode input[type="number"] {
-      background: #111827;
-      color: #f9fafb;
-      border-color: #374151;
-    }
-
-    .settings-summary,
-    .info-item {
-      border: 2px solid #e3e7ef;
-      border-radius: 22px;
-      padding: 18px 18px 16px;
-      background: rgba(255, 255, 255, 0.7);
-      margin-bottom: 18px;
-    }
-
-    body.dark-mode .settings-summary,
-    body.dark-mode .info-item {
-      background: rgba(17, 24, 39, 0.75);
-      border-color: #374151;
-    }
-
-    .settings-summary-title,
-    .info-title {
-      font-size: 16px;
-      color: #6b7280;
-      margin-bottom: 10px;
-      font-weight: 700;
-    }
-
-    .settings-summary-value {
-      font-size: 26px;
-      font-weight: 800;
-      line-height: 1.3;
-    }
-
-    .settings-summary-value small {
-      display: block;
-      font-size: 16px;
-      color: #6b7280;
-      margin-top: 6px;
-      font-weight: 600;
-    /* --- 新增：提升 time 输入在手机上的可读性与避免溢出 --- */
-    .input-row input[type="time"] {
-      font-size: 20px;        /* 数字更大更好看 */
-      padding: 14px 16px;     /* 更舒适的触控区域 */
-      max-width: 100%;        /* 不超出容器 */
-      min-width: 0;           /* 避免 flex 爆出（保险） */
-      box-sizing: border-box;
-    }
-
-    /* 去掉部分浏览器默认的内置按钮（兼容性友好提示） */
-    input[type="time"]::-webkit-clear-button,
-    input[type="time"]::-webkit-inner-spin-button {
-      display: none;
-    }
-
-    /* 响应式微调：窄屏时稍微缩小以保证整体布局 */
-    @media (max-width: 420px) {
-      .card { padding: 18px; }
-      h1 { font-size: 24px; }
-      .amount { font-size: 40px; }
-      .input-row input[type="time"] { font-size: 18px; padding: 12px 12px; }
-    }
-
     .buttons {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin: 14px 0;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 18px 0 20px;
     }
-
     button {
-      width: 100%;
-      min-height: 72px;
       border: none;
-      border-radius: 20px;
-      font-size: 20px;
-      font-weight: 800;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 600;
       cursor: pointer;
-      transition: transform 0.15s, opacity 0.15s;
+      transition: transform 0.12s ease, opacity 0.12s ease;
     }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    .primary { background: #22c55e; color: #0b1324; }
-    .accent { background: #60a5fa; color: #0b1324; }
-    .secondary { background: #dbe1ee; color: #0d1635; }
-
-    body.dark-mode .secondary {
-      background: #374151;
-      color: #f9fafb;
-    }
-
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); opacity: 0.92; }
+    .primary { background: #22c55e; color: #06210f; }
+    .secondary { background: #e2e8f0; color: #0f172a; }
+    body.dark-mode .secondary { background: #334155; color: #f8fafc; }
+    .accent { background: #60a5fa; color: #08111f; }
     .info {
       display: grid;
-      gap: 0;
-      margin-top: 10px;
+      gap: 10px;
     }
-
-    .info-value {
-      font-size: 34px;
-      font-weight: 900;
-      letter-spacing: 1px;
+    .info-item, .settings-summary {
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 14px;
+      padding: 12px 14px;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+    body.dark-mode .info-item, body.dark-mode .settings-summary {
+      background: rgba(30, 41, 59, 0.78);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .info-title, .settings-summary-title {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 6px;
+      transition: color 0.25s ease;
+    }
+    body.dark-mode .info-title, body.dark-mode .settings-summary-title { color: #94a3b8; }
+    .info-value, .settings-summary-value {
+      font-size: 18px;
+      font-weight: 600;
       font-variant-numeric: tabular-nums;
     }
-
-    .hint {
-      margin-top: 28px;
-      text-align: center;
-      color: #6b7280;
-      font-size: 15px;
-      line-height: 1.8;
+    .settings-summary-value small {
+      display: block;
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+      font-weight: 500;
+      transition: color 0.25s ease;
     }
+    body.dark-mode .settings-summary-value small { color: #94a3b8; }
+    .hint {
+      margin-top: 16px;
+      text-align: center;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.5;
+      transition: color 0.25s ease;
+    }
+    body.dark-mode .hint { color: #94a3b8; }
 
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.32);
+      background: rgba(2, 6, 23, 0.68);
       display: none;
       align-items: center;
       justify-content: center;
       padding: 20px;
       z-index: 999;
     }
-
     .modal-backdrop.show {
       display: flex;
     }
-
     .modal {
-      width: min(92vw, 460px);
-      background: #fff;
-      border-radius: 24px;
-      padding: 24px 20px;
-      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.45);
     }
-
-    body.dark-mode .modal {
-      background: #1f2937;
-      color: #f9fafb;
-    }
-
     .modal h2 {
-      margin: 0 0 18px;
-      font-size: 24px;
+      margin: 0 0 16px;
+      font-size: 22px;
     }
-
     .modal p {
       margin: 0 0 16px;
-      font-size: 14px;
-      color: #6b7280;
-      line-height: 1.6;
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
     }
-
-    body.dark-mode .modal p {
-      color: #cbd5e1;
+    body.dark-mode .modal {
+      background: #0f172a;
+      border: 1px solid rgba(148, 163, 184, 0.18);
     }
-
-    .modal .field-label {
-      font-size: 16px;
-      margin: 14px 0 8px;
-    }
-
+    body.dark-mode .modal p { color: #94a3b8; }
     .modal-actions {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 10px;
-      margin-top: 20px;
-    }
-
-    .modal-actions button {
-      min-height: 58px;
-      border-radius: 16px;
-      font-size: 16px;
-    }
-
-    @media (max-width: 480px) {
-      body {
-        padding: 12px;
-        align-items: flex-start;
-      }
-
-      .card {
-        width: calc(100vw - 24px);
-        margin: 18px auto;
-        padding: 22px 14px 26px;
-        border-radius: 24px;
-      }
-
-      h1 {
-        font-size: 24px;
-        margin-bottom: 22px;
-      }
-
-      .amount-label {
-        font-size: 16px;
-      }
-
-      .amount {
-        font-size: 72px;
-        margin-bottom: 24px;
-      }
-
-      .field-label {
-        font-size: 16px;
-      }
-
-      .time-input {
-        min-height: 76px;
-        font-size: 22px;
-        border-radius: 18px;
-        padding: 0 14px;
-      }
-
-      .settings-summary-value {
-        font-size: 22px;
-      }
-
-      .settings-summary-value small {
-        font-size: 14px;
-      }
-
-      .info-value {
-        font-size: 30px;
-      }
-
-      button {
-        min-height: 64px;
-        font-size: 18px;
-        border-radius: 18px;
-      }
-
-      .buttons {
-        gap: 12px;
-      }
-
-      .modal-actions {
-        grid-template-columns: 1fr;
-      }
+      margin-top: 18px;
     }
   </style>
 </head>
@@ -375,22 +212,21 @@
   <div class="amount-label">現在の残業代</div>
   <div class="amount" id="amount">¥0.000</div>
 
-  <div class="field-group">
-    <label for="startTime" class="field-label">出勤時間</label>
-    <input type="time" id="startTime" class="time-input" value="08:30" />
+  <div class="input-row">
+    <label for="startTime">出勤時間</label>
+    <input type="time" id="startTime" value="08:30" />
   </div>
 
   <div class="settings-summary">
     <div class="settings-summary-title">現在の設定</div>
-    <div class="settings-summary-value" id="settingsSummary">¥2000/時間・9時間<small>通常モード・未設定時はデフォルト値を使用</small></div>
+    <div class="settings-summary-value" id="settingsSummary">¥2000/時間 · 9時間<small>未設定時はデフォルト値を使用</small></div>
   </div>
 
   <div class="buttons">
     <button class="primary" id="startBtn">計算開始</button>
     <button class="accent" id="resetBtn">リセット</button>
   </div>
-
-  <div class="buttons">
+  <div class="buttons" style="margin-top: -8px;">
     <button class="secondary" id="settingsBtn">設定</button>
     <button class="secondary" id="themeBtn">ナイトモード</button>
   </div>
@@ -400,7 +236,6 @@
       <div class="info-title">勤務時間</div>
       <div class="info-value" id="workDuration">00:00:00</div>
     </div>
-
     <div class="info-item">
       <div class="info-title">残業時間</div>
       <div class="info-value" id="overtimeDuration">00:00:00</div>
@@ -418,20 +253,20 @@
     <h2>設定</h2>
     <p>時間あたり残業代と所定労働時間を変更できます。未入力またはデフォルトに戻した場合は、2000円/時間・9時間で計算します。</p>
 
-    <div class="field-group">
-      <label for="hourlyPayInput" class="field-label">時間あたり残業代（円/時間）</label>
+    <div class="input-row">
+      <label for="hourlyPayInput">時間あたり残業代（円/時間）</label>
       <input type="number" id="hourlyPayInput" min="0" step="0.001" placeholder="デフォルト 2000" />
     </div>
 
-    <div class="field-group">
-      <label for="workHoursInput" class="field-label">所定労働時間（時間）</label>
+    <div class="input-row">
+      <label for="workHoursInput">所定労働時間（時間）</label>
       <input type="number" id="workHoursInput" min="0" step="0.001" placeholder="デフォルト 9" />
     </div>
 
     <div class="modal-actions">
       <button class="secondary" id="cancelSettingsBtn">キャンセル</button>
       <button class="secondary" id="defaultSettingsBtn">デフォルト</button>
-      <button class="accent" id="saveSettingsBtn">保存</button>
+      <button class="secondary" id="saveSettingsBtn">保存</button>
     </div>
   </div>
 </div>
@@ -466,34 +301,22 @@
   function loadSettings() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        return {
-          hourlyPay: DEFAULT_HOURLY_PAY,
-          workHours: DEFAULT_WORK_HOURS,
-          startTime: DEFAULT_START_TIME,
-          theme: DEFAULT_THEME
-        };
-      }
+      if (!raw) return { hourlyPay: DEFAULT_HOURLY_PAY, workHours: DEFAULT_WORK_HOURS, startTime: DEFAULT_START_TIME, theme: DEFAULT_THEME };
       const parsed = JSON.parse(raw);
       return {
         hourlyPay: Number.isFinite(Number(parsed.hourlyPay)) && Number(parsed.hourlyPay) >= 0
-          ? Number(parsed.hourlyPay)
-          : DEFAULT_HOURLY_PAY,
+                ? Number(parsed.hourlyPay)
+                : DEFAULT_HOURLY_PAY,
         workHours: Number.isFinite(Number(parsed.workHours)) && Number(parsed.workHours) >= 0
-          ? Number(parsed.workHours)
-          : DEFAULT_WORK_HOURS,
+                ? Number(parsed.workHours)
+                : DEFAULT_WORK_HOURS,
         startTime: typeof parsed.startTime === "string" && /^\d{2}:\d{2}$/.test(parsed.startTime)
-          ? parsed.startTime
-          : DEFAULT_START_TIME,
+                ? parsed.startTime
+                : DEFAULT_START_TIME,
         theme: parsed.theme === "dark" ? "dark" : DEFAULT_THEME
       };
     } catch {
-      return {
-        hourlyPay: DEFAULT_HOURLY_PAY,
-        workHours: DEFAULT_WORK_HOURS,
-        startTime: DEFAULT_START_TIME,
-        theme: DEFAULT_THEME
-      };
+      return { hourlyPay: DEFAULT_HOURLY_PAY, workHours: DEFAULT_WORK_HOURS, startTime: DEFAULT_START_TIME, theme: DEFAULT_THEME };
     }
   }
 
@@ -524,7 +347,7 @@
   function updateSettingsSummary() {
     const settings = getSettings();
     settingsSummaryEl.innerHTML =
-      `¥${settings.hourlyPay}/時間・${settings.workHours}時間<small>${settings.theme === "dark" ? "ナイトモード" : "通常モード"}・未設定時はデフォルト値を使用</small>`;
+            `¥${settings.hourlyPay}/時間 · ${settings.workHours}時間<small>${settings.theme === "dark" ? "ナイトモード" : "通常モード"} · 未設定時はデフォルト値を使用</small>`;
   }
 
   function formatDuration(totalSeconds) {
@@ -539,13 +362,13 @@
     const [hours, minutes] = timeValue.split(":").map(Number);
     const now = new Date();
     const date = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      hours,
-      minutes,
-      0,
-      0
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            hours,
+            minutes,
+            0,
+            0
     );
 
     if (date.getTime() > now.getTime()) {
@@ -572,11 +395,7 @@
 
   function persistStartTime() {
     const settings = getSettings();
-    saveSettings({
-      ...settings,
-      startTime: startTimeInput.value || DEFAULT_START_TIME,
-      theme: settings.theme || DEFAULT_THEME
-    });
+    saveSettings({ ...settings, startTime: startTimeInput.value || DEFAULT_START_TIME, theme: settings.theme || DEFAULT_THEME });
   }
 
   function applyStoredSettingsToUI() {
@@ -595,9 +414,9 @@
 
     persistStartTime();
     startDate = buildStartDate(timeValue);
-
     if (timerId !== null) clearInterval(timerId);
     startBtn.textContent = "計算中";
+    startBtn.disabled = false;
     updateDisplay();
     timerId = setInterval(updateDisplay, 33);
   }
@@ -607,8 +426,8 @@
       clearInterval(timerId);
       timerId = null;
     }
-
     startDate = null;
+
     const settings = getSettings();
     startTimeInput.value = settings.startTime || DEFAULT_START_TIME;
 
@@ -618,6 +437,7 @@
     updateSettingsSummary();
 
     startBtn.textContent = "計算開始";
+    startBtn.disabled = false;
   }
 
   startBtn.addEventListener("click", startCalculation);
@@ -629,11 +449,7 @@
   themeBtn.addEventListener("click", () => {
     const settings = getSettings();
     const nextTheme = settings.theme === "dark" ? "light" : "dark";
-    saveSettings({
-      ...settings,
-      theme: nextTheme,
-      startTime: settings.startTime || startTimeInput.value || DEFAULT_START_TIME
-    });
+    saveSettings({ ...settings, theme: nextTheme, startTime: settings.startTime || startTimeInput.value || DEFAULT_START_TIME });
     applyStoredSettingsToUI();
   });
 
@@ -656,13 +472,7 @@
     }
 
     const currentSettings = getSettings();
-    saveSettings({
-      hourlyPay,
-      workHours,
-      startTime: startTimeInput.value || DEFAULT_START_TIME,
-      theme: currentSettings.theme || DEFAULT_THEME
-    });
-
+    saveSettings({ hourlyPay, workHours, startTime: startTimeInput.value || DEFAULT_START_TIME, theme: currentSettings.theme || DEFAULT_THEME });
     applyStoredSettingsToUI();
     updateDisplay();
     closeSettings();
