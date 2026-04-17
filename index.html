@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>残業代タイマー</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+    body.dark-mode {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #f8fafc;
+    }
+    .card {
+      width: 100%;
+      max-width: 460px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 24px;
+      padding: 28px 22px;
+      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+      backdrop-filter: blur(10px);
+      transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    body.dark-mode .card {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    }
+    h1 {
+      margin: 0 0 20px;
+      font-size: 28px;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    .amount-label {
+      text-align: center;
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 8px;
+      transition: color 0.25s ease;
+    }
+    body.dark-mode .amount-label { color: #cbd5e1; }
+    .amount {
+      text-align: center;
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 22px;
+      letter-spacing: 1px;
+      font-variant-numeric: tabular-nums;
+      word-break: break-all;
+    }
+    .input-row, .settings-summary {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      color: #475569;
+      margin-bottom: 8px;
+      transition: color 0.25s ease;
+    }
+    body.dark-mode label { color: #cbd5e1; }
+    input[type="time"], input[type="number"] {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font-size: 16px;
+      outline: none;
+      transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+    body.dark-mode input[type="time"], body.dark-mode input[type="number"] {
+      background: rgba(30, 41, 59, 0.9);
+      color: #f8fafc;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+    input:focus {
+      border-color: rgba(96, 165, 250, 0.9);
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 18px 0 20px;
+    }
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); opacity: 0.92; }
+    .primary { background: #22c55e; color: #06210f; }
+    .secondary { background: #e2e8f0; color: #0f172a; }
+    body.dark-mode .secondary { background: #334155; color: #f8fafc; }
+    .accent { background: #60a5fa; color: #08111f; }
+    .info {
+      display: grid;
+      gap: 10px;
+    }
+    .info-item, .settings-summary {
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 14px;
+      padding: 12px 14px;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+    body.dark-mode .info-item, body.dark-mode .settings-summary {
+      background: rgba(30, 41, 59, 0.78);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .info-title, .settings-summary-title {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 6px;
+      transition: color 0.25s ease;
+    }
+    body.dark-mode .info-title, body.dark-mode .settings-summary-title { color: #94a3b8; }
+    .info-value, .settings-summary-value {
+      font-size: 18px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .settings-summary-value small {
+      display: block;
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+      font-weight: 500;
+      transition: color 0.25s ease;
+    }
+    body.dark-mode .settings-summary-value small { color: #94a3b8; }
+    .hint {
+      margin-top: 16px;
+      text-align: center;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.5;
+      transition: color 0.25s ease;
+    }
+    body.dark-mode .hint { color: #94a3b8; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.68);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 999;
+    }
+    .modal-backdrop.show {
+      display: flex;
+    }
+    .modal {
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+    }
+    .modal h2 {
+      margin: 0 0 16px;
+      font-size: 22px;
+    }
+    .modal p {
+      margin: 0 0 16px;
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+    body.dark-mode .modal {
+      background: #0f172a;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+    body.dark-mode .modal p { color: #94a3b8; }
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>残業代タイマー</h1>
+
+  <div class="amount-label">現在の残業代</div>
+  <div class="amount" id="amount">¥0.000</div>
+
+  <div class="input-row">
+    <label for="startTime">出勤時間</label>
+    <input type="time" id="startTime" value="08:30" />
+  </div>
+
+  <div class="settings-summary">
+    <div class="settings-summary-title">現在の設定</div>
+    <div class="settings-summary-value" id="settingsSummary">¥2000/時間 · 9時間<small>未設定時はデフォルト値を使用</small></div>
+  </div>
+
+  <div class="buttons">
+    <button class="primary" id="startBtn">計算開始</button>
+    <button class="accent" id="resetBtn">リセット</button>
+  </div>
+  <div class="buttons" style="margin-top: -8px;">
+    <button class="secondary" id="settingsBtn">設定</button>
+    <button class="secondary" id="themeBtn">ナイトモード</button>
+  </div>
+
+  <div class="info">
+    <div class="info-item">
+      <div class="info-title">勤務時間</div>
+      <div class="info-value" id="workDuration">00:00:00</div>
+    </div>
+    <div class="info-item">
+      <div class="info-title">残業時間</div>
+      <div class="info-value" id="overtimeDuration">00:00:00</div>
+    </div>
+  </div>
+
+  <div class="hint">
+    残業時間 = 勤務時間 - 所定労働時間<br>
+    金額 = 残業秒数 ×（時間あたり残業代 ÷ 3600）
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <h2>設定</h2>
+    <p>時間あたり残業代と所定労働時間を変更できます。未入力またはデフォルトに戻した場合は、2000円/時間・9時間で計算します。</p>
+
+    <div class="input-row">
+      <label for="hourlyPayInput">時間あたり残業代（円/時間）</label>
+      <input type="number" id="hourlyPayInput" min="0" step="0.001" placeholder="デフォルト 2000" />
+    </div>
+
+    <div class="input-row">
+      <label for="workHoursInput">所定労働時間（時間）</label>
+      <input type="number" id="workHoursInput" min="0" step="0.001" placeholder="デフォルト 9" />
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" id="cancelSettingsBtn">キャンセル</button>
+      <button class="secondary" id="defaultSettingsBtn">デフォルト</button>
+      <button class="secondary" id="saveSettingsBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const DEFAULT_HOURLY_PAY = 2000;
+  const DEFAULT_WORK_HOURS = 9;
+  const DEFAULT_START_TIME = "08:30";
+  const DEFAULT_THEME = "light";
+  const STORAGE_KEY = "overtimeTimerSettings";
+
+  const amountEl = document.getElementById("amount");
+  const workDurationEl = document.getElementById("workDuration");
+  const overtimeDurationEl = document.getElementById("overtimeDuration");
+  const startTimeInput = document.getElementById("startTime");
+  const startBtn = document.getElementById("startBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const settingsBtn = document.getElementById("settingsBtn");
+  const settingsSummaryEl = document.getElementById("settingsSummary");
+  const themeBtn = document.getElementById("themeBtn");
+
+  const modalBackdrop = document.getElementById("modalBackdrop");
+  const hourlyPayInput = document.getElementById("hourlyPayInput");
+  const workHoursInput = document.getElementById("workHoursInput");
+  const cancelSettingsBtn = document.getElementById("cancelSettingsBtn");
+  const defaultSettingsBtn = document.getElementById("defaultSettingsBtn");
+  const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+
+  let timerId = null;
+  let startDate = null;
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { hourlyPay: DEFAULT_HOURLY_PAY, workHours: DEFAULT_WORK_HOURS, startTime: DEFAULT_START_TIME, theme: DEFAULT_THEME };
+      const parsed = JSON.parse(raw);
+      return {
+        hourlyPay: Number.isFinite(Number(parsed.hourlyPay)) && Number(parsed.hourlyPay) >= 0
+                ? Number(parsed.hourlyPay)
+                : DEFAULT_HOURLY_PAY,
+        workHours: Number.isFinite(Number(parsed.workHours)) && Number(parsed.workHours) >= 0
+                ? Number(parsed.workHours)
+                : DEFAULT_WORK_HOURS,
+        startTime: typeof parsed.startTime === "string" && /^\d{2}:\d{2}$/.test(parsed.startTime)
+                ? parsed.startTime
+                : DEFAULT_START_TIME,
+        theme: parsed.theme === "dark" ? "dark" : DEFAULT_THEME
+      };
+    } catch {
+      return { hourlyPay: DEFAULT_HOURLY_PAY, workHours: DEFAULT_WORK_HOURS, startTime: DEFAULT_START_TIME, theme: DEFAULT_THEME };
+    }
+  }
+
+  function saveSettings(settings) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  }
+
+  function getSettings() {
+    return loadSettings();
+  }
+
+  function openSettings() {
+    const settings = getSettings();
+    hourlyPayInput.value = settings.hourlyPay;
+    workHoursInput.value = settings.workHours;
+    modalBackdrop.classList.add("show");
+  }
+
+  function closeSettings() {
+    modalBackdrop.classList.remove("show");
+  }
+
+  function applyTheme(theme) {
+    document.body.classList.toggle("dark-mode", theme === "dark");
+    themeBtn.textContent = theme === "dark" ? "通常モード" : "ナイトモード";
+  }
+
+  function updateSettingsSummary() {
+    const settings = getSettings();
+    settingsSummaryEl.innerHTML =
+            `¥${settings.hourlyPay}/時間 · ${settings.workHours}時間<small>${settings.theme === "dark" ? "ナイトモード" : "通常モード"} · 未設定時はデフォルト値を使用</small>`;
+  }
+
+  function formatDuration(totalSeconds) {
+    const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+    const hours = String(Math.floor(safeSeconds / 3600)).padStart(2, "0");
+    const minutes = String(Math.floor((safeSeconds % 3600) / 60)).padStart(2, "0");
+    const seconds = String(safeSeconds % 60).padStart(2, "0");
+    return `${hours}:${minutes}:${seconds}`;
+  }
+
+  function buildStartDate(timeValue) {
+    const [hours, minutes] = timeValue.split(":").map(Number);
+    const now = new Date();
+    const date = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            hours,
+            minutes,
+            0,
+            0
+    );
+
+    if (date.getTime() > now.getTime()) {
+      date.setDate(date.getDate() - 1);
+    }
+    return date;
+  }
+
+  function updateDisplay() {
+    if (!startDate) return;
+
+    const now = new Date();
+    const workedSeconds = Math.max(0, (now - startDate) / 1000);
+
+    const settings = getSettings();
+    const overtimeSeconds = Math.max(0, workedSeconds - settings.workHours * 3600);
+    const payPerSecond = settings.hourlyPay / 3600;
+    const amount = overtimeSeconds * payPerSecond;
+
+    workDurationEl.textContent = formatDuration(workedSeconds);
+    overtimeDurationEl.textContent = formatDuration(overtimeSeconds);
+    amountEl.textContent = `¥${amount.toFixed(3)}`;
+  }
+
+  function persistStartTime() {
+    const settings = getSettings();
+    saveSettings({ ...settings, startTime: startTimeInput.value || DEFAULT_START_TIME, theme: settings.theme || DEFAULT_THEME });
+  }
+
+  function applyStoredSettingsToUI() {
+    const settings = getSettings();
+    startTimeInput.value = settings.startTime || DEFAULT_START_TIME;
+    applyTheme(settings.theme || DEFAULT_THEME);
+    updateSettingsSummary();
+  }
+
+  function startCalculation() {
+    const timeValue = startTimeInput.value;
+    if (!timeValue) {
+      alert("先に出勤時間を入力してください");
+      return;
+    }
+
+    persistStartTime();
+    startDate = buildStartDate(timeValue);
+    if (timerId !== null) clearInterval(timerId);
+    startBtn.textContent = "計算中";
+    startBtn.disabled = false;
+    updateDisplay();
+    timerId = setInterval(updateDisplay, 33);
+  }
+
+  function resetAll() {
+    if (timerId !== null) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+    startDate = null;
+
+    const settings = getSettings();
+    startTimeInput.value = settings.startTime || DEFAULT_START_TIME;
+
+    amountEl.textContent = "¥0.000";
+    workDurationEl.textContent = "00:00:00";
+    overtimeDurationEl.textContent = "00:00:00";
+    updateSettingsSummary();
+
+    startBtn.textContent = "計算開始";
+    startBtn.disabled = false;
+  }
+
+  startBtn.addEventListener("click", startCalculation);
+  resetBtn.addEventListener("click", resetAll);
+
+  settingsBtn.addEventListener("click", openSettings);
+  cancelSettingsBtn.addEventListener("click", closeSettings);
+
+  themeBtn.addEventListener("click", () => {
+    const settings = getSettings();
+    const nextTheme = settings.theme === "dark" ? "light" : "dark";
+    saveSettings({ ...settings, theme: nextTheme, startTime: settings.startTime || startTimeInput.value || DEFAULT_START_TIME });
+    applyStoredSettingsToUI();
+  });
+
+  defaultSettingsBtn.addEventListener("click", () => {
+    hourlyPayInput.value = DEFAULT_HOURLY_PAY;
+    workHoursInput.value = DEFAULT_WORK_HOURS;
+  });
+
+  saveSettingsBtn.addEventListener("click", () => {
+    const hourlyPay = hourlyPayInput.value === "" ? DEFAULT_HOURLY_PAY : Number(hourlyPayInput.value);
+    const workHours = workHoursInput.value === "" ? DEFAULT_WORK_HOURS : Number(workHoursInput.value);
+
+    if (!Number.isFinite(hourlyPay) || hourlyPay < 0) {
+      alert("時間あたり残業代には 0 以上の数値を入力してください");
+      return;
+    }
+    if (!Number.isFinite(workHours) || workHours < 0) {
+      alert("所定労働時間には 0 以上の数値を入力してください");
+      return;
+    }
+
+    const currentSettings = getSettings();
+    saveSettings({ hourlyPay, workHours, startTime: startTimeInput.value || DEFAULT_START_TIME, theme: currentSettings.theme || DEFAULT_THEME });
+    applyStoredSettingsToUI();
+    updateDisplay();
+    closeSettings();
+  });
+
+  startTimeInput.addEventListener("change", persistStartTime);
+
+  modalBackdrop.addEventListener("click", (e) => {
+    if (e.target === modalBackdrop) closeSettings();
+  });
+
+  applyStoredSettingsToUI();
+</script>
+</body>
+</html>
